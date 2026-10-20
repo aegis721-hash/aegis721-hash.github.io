@@ -7,40 +7,22 @@
 <title>Tesla 승인</title>
 </head>
 <body>
-<p id="msg">승인 결과를 서버로 보내는 중입니다.</p>
+<p id="msg">승인 결과를 집 서버로 보내는 중입니다. 폰은 집 Wi-Fi에 연결되어 있어야 합니다.</p>
 <script>
 const params = new URLSearchParams(location.search);
 const code = params.get("code") || "";
 const state = params.get("state") || "";
 const error = params.get("error") || "";
-if (location.search) history.replaceState({}, "", location.pathname);
 const msg = document.getElementById("msg");
 if (!code && !error) {
   msg.textContent = "승인 코드가 없습니다. Tesla 로그인 화면에서 시작해 주세요.";
 } else {
-  const body = JSON.stringify({code, state, error});
-  const targets = [
-    "http://192.168.1.244:8766/callback",
-    "http://aegishome.local:8766/callback",
-    "http://aegishome:8766/callback"
-  ];
-  (async () => {
-    for (const url of targets) {
-      try {
-        const res = await fetch(url, {
-          method: "POST",
-          mode: "cors",
-          headers: {"Content-Type": "application/json"},
-          body
-        });
-        if (res.ok) {
-          msg.textContent = "승인을 서버에 저장했습니다. 이 화면은 닫아도 됩니다.";
-          return;
-        }
-      } catch (e) {}
-    }
-    msg.textContent = "서버에 도달하지 못했습니다. 폰이 집 Wi-Fi에 연결돼 있는지 확인한 뒤 다시 승인해 주세요.";
-  })();
+  const dest = new URL("http://192.168.1.244:8787/tesla/callback");
+  if (code) dest.searchParams.set("code", code);
+  if (state) dest.searchParams.set("state", state);
+  if (error) dest.searchParams.set("error", error);
+  history.replaceState({}, "", location.pathname);
+  location.replace(dest.toString());
 }
 </script>
 </body>
